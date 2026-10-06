@@ -1,0 +1,13 @@
+# Segredos e dados locais: nunca no repositório
+.env
+.env.*
+!.env.example
+node_modules/
+dados/
+dist/
+dist-pacote/
+web/dist/
+*.zip
+coverage/
+# exportações do Cronogramas trazem hash de senha: não versionar
+exportacao-*.json

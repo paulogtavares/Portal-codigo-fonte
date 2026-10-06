@@ -1,0 +1,6 @@
+dist
+dist-pacote
+web/dist
+dados
+package-lock.json
+CHANGELOG.md

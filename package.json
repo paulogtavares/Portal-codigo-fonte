@@ -1,0 +1,43 @@
+{
+  "name": "portal-plataforma",
+  "version": "1.0.0-alpha.1",
+  "buildDate": "2026-10-05",
+  "description": "Portal da plataforma Infracommerce: login único, usuários e perfis, menu dos módulos e repasse com o token da plataforma",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": "24.x"
+  },
+  "workspaces": [
+    "api",
+    "web"
+  ],
+  "scripts": {
+    "dev": "npm run dev -w api & npm run dev -w web",
+    "dev:api": "npm run dev -w api",
+    "dev:web": "npm run dev -w web",
+    "build": "npm run build -w web",
+    "test": "vitest run",
+    "test:postgres": "vitest run --project api --no-file-parallelism",
+    "typecheck": "tsc -p api && tsc -p web",
+    "lint": "eslint .",
+    "formatar": "prettier --write .",
+    "formatacao": "prettier --check .",
+    "empacotar": "node empacotar/gerar-versao.mjs"
+  },
+  "dependencies": {
+    "plataforma-kit": "github:paulogtavares/plataforma-kit#v1.5.1"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.39.5",
+    "esbuild": "^0.28.0",
+    "eslint": "^9.39.5",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-react-hooks": "^7.1.1",
+    "globals": "^17.12.0",
+    "prettier": "^3.9.9",
+    "typescript": "5.9",
+    "typescript-eslint": "^8.70.1",
+    "vitest": "^5.0.2"
+  }
+}
