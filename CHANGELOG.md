@@ -1,5 +1,15 @@
 # Portal da plataforma · histórico de versões
 
+## 1.0.0-alpha.3 (2026-10-06) · cliente nasce sem acesso
+
+Decisão de 06/10/2026: o usuário de cliente nunca nasce com cronograma, módulo ou valores disponíveis; o acesso é
+marcado explicitamente.
+
+- A importação do Cronogramas não dá mais `cronogramas.ver` aos perfis de cliente (só aos internos, quando a permissão
+  existir no Cronogramas v2.2.0). Perfis de cliente entram sem nenhum módulo, e a prévia avisa quais são.
+- Confirmado por teste: a cliente importada entra no portal sem nenhum módulo no menu. Usuário novo sempre exige a
+  escolha de um perfil pelo administrador (regra do kit).
+
 ## 1.0.0-alpha.2 (2026-10-06) · ajustes da revisão de 06/10
 
 Kit **plataforma-kit 1.6.0** (pedido deste portal). Ajustes apontados na validação independente e na revisão do

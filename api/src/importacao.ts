@@ -6,8 +6,9 @@
  *  - ids mantidos (clientes, perfis e usuários): o Cronogramas identifica a réplica local pelo sub do token, e os
  *    usuários externos apontam para os clientes pelo id;
  *  - perfis do Cronogramas viram perfis do portal: chaves com o prefixo do kit (prefixar), "portal.interno" quando o
- *    perfil tem "cronogramas.visao.interna" ou é usado por alguém interno, e "cronogramas.ver" quando o catálogo do
- *    Cronogramas tiver essa permissão (pedido para a v2.2.0); numa reimportação, as permissões de outros módulos
+ *    perfil tem "cronogramas.visao.interna" ou é usado por alguém interno, e "cronogramas.ver" (quando existir no
+ *    catálogo) só nos perfis internos — perfil de cliente nasce sem nenhum módulo (decisão de 06/10/2026); numa
+ *    reimportação, as permissões de outros módulos
  *    que o portal já tinha dado ao perfil ficam;
  *  - senha: o hash do Cronogramas vale no portal (mesmo kit, mesmo formato), mas só entra para quem ainda não tem
  *    senha no portal — reimportar nunca desfaz uma troca de senha feita no portal;
@@ -114,7 +115,9 @@ export function converterPermissoes(lista: readonly string[], interno: boolean, 
     if (CHAVE.test(k)) s.add(k);
   }
   if (interno || s.has(PERMISSAO_VISAO_INTERNA_CRONOGRAMAS)) s.add(PERMISSAO_INTERNA);
-  if (catalogo.includes(PERMISSAO_ACESSO_CRONOGRAMAS)) s.add(PERMISSAO_ACESSO_CRONOGRAMAS);
+  // acesso ao módulo só para a equipe interna: perfil de cliente nasce sem nenhum módulo (decisão de 06/10/2026);
+  // o acesso do cliente é marcado depois, pelo administrador, e cada cronograma é liberado um a um no Cronogramas
+  if (s.has(PERMISSAO_INTERNA) && catalogo.includes(PERMISSAO_ACESSO_CRONOGRAMAS)) s.add(PERMISSAO_ACESSO_CRONOGRAMAS);
   return [...s];
 }
 
@@ -134,9 +137,14 @@ export async function importarCronogramas(banco: BancoComTransacao, dados: Expor
     },
     avisos: [],
   };
-  if (!o.catalogoCronogramas.includes(PERMISSAO_ACESSO_CRONOGRAMAS))
+  const perfisDeCliente = dados.perfis.filter(
+    (p) =>
+      !converterPermissoes(p.permissoes, false, []).includes(PERMISSAO_INTERNA) &&
+      !dados.usuarios.some((u) => u.perfil_id === p.id && u.tipo === "interno"),
+  );
+  if (perfisDeCliente.length)
     resumo.avisos.push(
-      `O Cronogramas ainda não tem a permissão "${PERMISSAO_ACESSO_CRONOGRAMAS}". Perfis sem nenhuma permissão do Cronogramas (como "Cliente") não verão o módulo no portal até ela existir.`,
+      `Perfis de cliente entram sem acesso a nenhum módulo (${perfisDeCliente.map((p) => p.nome).join(", ")}): o administrador marca o acesso de cada cliente, e cada cronograma é liberado um a um no Cronogramas.`,
     );
   const emails = new Map<string, number>();
   for (const u of dados.usuarios) emails.set(u.email, (emails.get(u.email) ?? 0) + 1);

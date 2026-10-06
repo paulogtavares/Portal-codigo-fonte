@@ -94,7 +94,9 @@ describe("conversão dos perfis", () => {
       "portal.interno",
     ]);
     expect(converterPermissoes(["cronogramas.criar"], true, [])).toEqual(["cronogramas.criar", "portal.interno"]);
-    expect(converterPermissoes([], false, ["cronogramas.ver"])).toEqual(["cronogramas.ver"]);
+    // perfil de cliente nasce sem nenhum módulo, mesmo com cronogramas.ver no catálogo (decisão de 06/10/2026)
+    expect(converterPermissoes([], false, ["cronogramas.ver"])).toEqual([]);
+    expect(converterPermissoes(["visao.interna"], false, ["cronogramas.ver"])).toContain("cronogramas.ver");
   });
 });
 
@@ -111,7 +113,18 @@ describe("importação", () => {
     const r = (await importar(await exportacao(), false)).json();
     expect(r.perfis.renomeados).toEqual([{ de: "Comercial (teste)", para: "Comercial (teste) (Cronogramas)" }]);
     expect(r.usuarios).toMatchObject({ criados: 3, comSenhaDoCronogramas: 2, semSenha: ["carla@lume.com"] });
-    expect(r.avisos.some((a: string) => a.includes("cronogramas.ver"))).toBe(true);
+    expect(
+      r.avisos.some((a: string) => a.includes("Perfis de cliente entram sem acesso") && a.includes("Cliente")),
+    ).toBe(true);
+    const cliente = (await p.banco.query("SELECT permissoes FROM perfis WHERE id = $1", [ID.cliente_perfil])).rows[0];
+    expect(cliente.permissoes).toEqual([]);
+    // a cliente importada entra no portal sem nenhum módulo
+    await p.banco.query(
+      "UPDATE usuarios SET senha_hash = (SELECT senha_hash FROM usuarios WHERE id = $1), precisa_trocar_senha = false WHERE id = $2",
+      [ID.ana, ID.carla],
+    );
+    const carla = await entrar(p.app, "carla@lume.com", "Senha-do-Cronogramas-1");
+    expect((await p.app.inject({ url: "/api/portal/menu", headers: { cookie: carla } })).json()).toEqual([]);
     const u = (
       await p.banco.query(
         "SELECT id, tipo, cliente_id, administrador, perfil_id FROM usuarios WHERE email = 'carla@lume.com'",
