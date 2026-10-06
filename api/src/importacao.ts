@@ -17,6 +17,7 @@
  */
 import { z } from "zod";
 import { prefixar } from "plataforma-kit/permissoes";
+import { conferirSenha } from "plataforma-kit/seguranca";
 import type { Banco, BancoComTransacao } from "plataforma-kit/tipos";
 import { PERMISSAO_INTERNA } from "./permissoes.ts";
 
@@ -24,6 +25,15 @@ const uuid = z.string().uuid();
 const CHAVE = /^[a-z][a-z0-9_]*(\.[a-z][a-z0-9_]*)+$/;
 export const PERMISSAO_VISAO_INTERNA_CRONOGRAMAS = "cronogramas.visao.interna";
 export const PERMISSAO_ACESSO_CRONOGRAMAS = "cronogramas.ver";
+
+/** Contas de teste do Cronogramas (MODO_TESTE e 04_usuarios_dev.sql), todas com a senha conhecida. */
+export const EMAILS_TESTE_CRONOGRAMAS = [
+  "ana.souza@exemplo.com.br",
+  "bruno.lima@exemplo.com.br",
+  "carla@lume.exemplo.com.br",
+  "marina.costa@exemplo.com.br",
+] as const;
+const SENHA_TESTE_CRONOGRAMAS = "teste123";
 
 export const esquemaExportacao = z.object({
   origem: z.literal("cronogramas", { errorMap: () => ({ message: "O arquivo não é uma exportação do Cronogramas." }) }),
@@ -77,6 +87,8 @@ export interface ResumoImportacao {
     conflitos: { email: string; motivo: string }[];
     comSenhaDoCronogramas: number;
     semSenha: string[];
+    /** contas de teste do Cronogramas (e-mail de teste ou senha teste123); em produção entram inativas e sem senha */
+    contasTeste: { email: string; motivo: string; bloqueada: boolean }[];
   };
   avisos: string[];
 }
@@ -88,6 +100,8 @@ export interface OpcoesImportacao {
   usuarioId: string;
   /** chaves do catálogo do Cronogramas conhecidas pelo portal (para saber se cronogramas.ver existe) */
   catalogoCronogramas: readonly string[];
+  /** em produção: contas de teste entram inativas, sem senha e sem administrador */
+  bloquearContasDeTeste?: boolean;
 }
 
 class Desfazer extends Error {}
@@ -109,7 +123,15 @@ export async function importarCronogramas(banco: BancoComTransacao, dados: Expor
     simulacao: o.simular,
     clientes: { criados: 0, atualizados: 0 },
     perfis: { criados: [], atualizados: [], renomeados: [] },
-    usuarios: { criados: 0, atualizados: 0, reconciliados: [], conflitos: [], comSenhaDoCronogramas: 0, semSenha: [] },
+    usuarios: {
+      criados: 0,
+      atualizados: 0,
+      reconciliados: [],
+      conflitos: [],
+      comSenhaDoCronogramas: 0,
+      semSenha: [],
+      contasTeste: [],
+    },
     avisos: [],
   };
   if (!o.catalogoCronogramas.includes(PERMISSAO_ACESSO_CRONOGRAMAS))
@@ -237,7 +259,7 @@ async function importarUsuarios(
 ) {
   const clientes = new Set((await c.query<{ id: string }>("SELECT id FROM clientes")).rows.map((x) => x.id));
   const vistos = new Set<string>();
-  for (const u of d.usuarios) {
+  for (let u of d.usuarios) {
     if (vistos.has(u.email)) {
       r.usuarios.conflitos.push({ email: u.email, motivo: "e-mail repetido na exportação (só o primeiro entrou)" });
       continue;
@@ -252,6 +274,19 @@ async function importarUsuarios(
     if (administrador && u.tipo !== "interno") {
       r.avisos.push(`${u.email}: administrador externo não existe no portal; entrou sem ser administrador.`);
       administrador = false;
+    }
+    // conta de teste do Cronogramas: e-mail da lista ou senha conhecida
+    const motivoTeste = (EMAILS_TESTE_CRONOGRAMAS as readonly string[]).includes(u.email)
+      ? "e-mail de teste do Cronogramas"
+      : u.senha_hash && (await conferirSenha(SENHA_TESTE_CRONOGRAMAS, u.senha_hash))
+        ? `senha de teste (${SENHA_TESTE_CRONOGRAMAS})`
+        : null;
+    if (motivoTeste) {
+      r.usuarios.contasTeste.push({ email: u.email, motivo: motivoTeste, bloqueada: !!o.bloquearContasDeTeste });
+      if (o.bloquearContasDeTeste) {
+        u = { ...u, ativo: false, administrador: false, senha_hash: null, precisa_trocar_senha: true };
+        administrador = false;
+      }
     }
     const perfilId = u.perfil_id && idsPerfis.has(u.perfil_id) ? u.perfil_id : null;
     if (u.perfil_id && !perfilId) r.avisos.push(`${u.email}: perfil ${u.perfil_id} não veio na exportação.`);
@@ -339,4 +374,11 @@ async function importarUsuarios(
       r.usuarios.criados++;
     }
   }
+  const testes = r.usuarios.contasTeste;
+  if (testes.length)
+    r.avisos.push(
+      o.bloquearContasDeTeste
+        ? `${testes.length} conta(s) de teste do Cronogramas entraram inativas e sem senha (produção): ${testes.map((t) => t.email).join(", ")}.`
+        : `${testes.length} conta(s) de teste do Cronogramas (senha conhecida): ${testes.map((t) => t.email).join(", ")}. Em produção elas entram inativas e sem senha.`,
+    );
 }

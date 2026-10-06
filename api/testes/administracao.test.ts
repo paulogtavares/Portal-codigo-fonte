@@ -108,9 +108,8 @@ describe("saúde dos módulos", () => {
     expect((await req("GET", "/api/portal/modulos", proj)).statusCode).toBe(403);
   });
 
-  it("verificar agora relê e avisa permissões novas desde o início", async () => {
+  it("verificar agora relê os módulos", async () => {
     const r = (await req("POST", "/api/portal/modulos/atualizar", admin)).json();
     expect(r.ultimaAtualizacao).toBeTruthy();
-    expect(r.catalogo).toEqual({ novas: [], removidas: [] });
   });
 });

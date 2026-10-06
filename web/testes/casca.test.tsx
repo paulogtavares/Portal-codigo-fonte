@@ -7,12 +7,13 @@ import { ProvedorAvisos, ProvedorSessao } from "plataforma-kit/react";
 import type { ModuloMenu } from "../src/api.ts";
 import { cliente } from "../src/api.ts";
 import { AreaModulos } from "../src/componentes/AreaModulos.tsx";
-import { Lateral, rotaDoPortal } from "../src/componentes/Lateral.tsx";
+import { agruparPorArea, Lateral, rotaDoPortal } from "../src/componentes/Lateral.tsx";
 
 const menu: ModuloMenu[] = [
   {
     id: "cronogramas",
     nome: "Cronogramas",
+    grupo: null,
     prefixo: "/cronogramas",
     noAr: true,
     itens: [
@@ -23,6 +24,7 @@ const menu: ModuloMenu[] = [
   {
     id: "orcamentos",
     nome: "Orçamentos",
+    grupo: "Financeiro",
     prefixo: "/financeiro/orcamentos",
     noAr: false,
     itens: [{ id: "orcamentos", rotulo: "Orçamentos", caminho: "/" }],
@@ -76,6 +78,23 @@ describe("rotas do portal", () => {
     expect(rotaDoPortal("/m/cronogramas/modelos/1")).toEqual({ modulo: "cronogramas", caminho: "/modelos/1" });
     expect(rotaDoPortal("/m/orcamentos")).toEqual({ modulo: "orcamentos", caminho: "/" });
     expect(rotaDoPortal("/admin/usuarios")).toBeNull();
+  });
+});
+
+describe("áreas do menu", () => {
+  it("módulos com o mesmo grupo ficam sob um título; sem grupo, o próprio nome", () => {
+    const dre: ModuloMenu = { id: "dre", nome: "DRE", grupo: "financeiro", prefixo: "/dre", noAr: true, itens: [] };
+    expect(agruparPorArea([...menu, dre]).map((a) => [a.titulo, a.modulos.map((m) => m.id)])).toEqual([
+      ["Cronogramas", ["cronogramas"]],
+      ["Financeiro", ["orcamentos", "dre"]],
+    ]);
+  });
+
+  it("no menu lateral, Orçamentos aparece dentro de Financeiro", () => {
+    montar("/", <Lateral menu={menu} carregando={false} />);
+    const titulos = [...document.querySelectorAll(".lateral-titulo")].map((t) => t.textContent);
+    expect(titulos.some((t) => t?.startsWith("Financeiro"))).toBe(true);
+    expect(titulos.some((t) => t?.startsWith("Orçamentos"))).toBe(false);
   });
 });
 

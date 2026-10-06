@@ -19,8 +19,8 @@ import type { Registro } from "../modulos.ts";
 export interface OpcoesRotasPortal {
   banco: BancoComTransacao;
   registro: Registro;
-  /** chaves do catálogo dos módulos quando o portal iniciou */
-  catalogoInicial: ReadonlySet<string>;
+  /** em produção, a importação bloqueia as contas de teste do Cronogramas */
+  producao: boolean;
 }
 
 export async function rotasPortal(app: FastifyInstance, o: OpcoesRotasPortal) {
@@ -33,17 +33,12 @@ export async function rotasPortal(app: FastifyInstance, o: OpcoesRotasPortal) {
   };
 
   function situacao(admin: boolean) {
-    const atuais = new Set(registro.catalogoModulos().map((p) => p.chave));
-    const daInicial = [...o.catalogoInicial];
     return {
       ultimaAtualizacao: registro.ultimaAtualizacao,
-      catalogo: {
-        novas: [...atuais].filter((k) => !o.catalogoInicial.has(k)),
-        removidas: daInicial.filter((k) => !atuais.has(k)),
-      },
       modulos: registro.lista().map((e) => ({
         id: e.id,
         nome: e.manifesto?.nome ?? e.id,
+        grupo: e.manifesto?.grupo ?? null,
         // o endereço interno da rede privada só aparece para o administrador
         ...(admin ? { url: e.url } : {}),
         prefixo: e.prefixo,
@@ -104,6 +99,7 @@ export async function rotasPortal(app: FastifyInstance, o: OpcoesRotasPortal) {
       reconciliarPorEmail: corpo.reconciliarPorEmail,
       usuarioId: req.usuario!.id,
       catalogoCronogramas,
+      bloquearContasDeTeste: o.producao,
     });
   });
 

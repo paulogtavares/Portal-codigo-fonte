@@ -55,12 +55,6 @@ export function Modulos() {
       <p className="texto-apoio">
         Última verificação: {dataHora(d?.ultimaAtualizacao ?? null)}. O portal relê os módulos a cada minuto.
       </p>
-      {!!d?.catalogo.novas.length && (
-        <p className="aviso">
-          Há permissões novas desde que o portal iniciou ({d.catalogo.novas.join(", ")}). Reinicie o portal para
-          oferecê-las nos perfis.
-        </p>
-      )}
       {q.error && <p className="aviso aviso-erro">{(q.error as Error).message}</p>}
       <div className="rolagem-tabela">
         <table className="tabela-portal">
@@ -80,7 +74,10 @@ export function Modulos() {
               <tr key={m.id}>
                 <td>
                   <strong>{m.nome}</strong>
-                  <div className="texto-apoio">{m.id}</div>
+                  <div className="texto-apoio">
+                    {m.id}
+                    {m.grupo && ` · área ${m.grupo}`}
+                  </div>
                 </td>
                 <td>{m.versao ? `v${m.versao}` : "—"}</td>
                 <td>

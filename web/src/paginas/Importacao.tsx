@@ -34,6 +34,21 @@ function Resumo({ r }: { r: ResumoImportacao }) {
           <li key={x.email}>{x.email}: o usuário do portal passa a ter o mesmo id do Cronogramas</li>
         ))}
       </ul>
+      {!!u.contasTeste.length && (
+        <div className="aviso">
+          <strong>Contas de teste do Cronogramas</strong>
+          {u.contasTeste[0].bloqueada
+            ? " (entram inativas e sem senha):"
+            : " (em produção entrariam inativas e sem senha):"}
+          <ul>
+            {u.contasTeste.map((c) => (
+              <li key={c.email}>
+                {c.email}: {c.motivo}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
       {!!u.semSenha.length && (
         <p className="aviso">
           Sem senha (o administrador gera uma senha provisória em Usuários e perfis): {u.semSenha.join(", ")}

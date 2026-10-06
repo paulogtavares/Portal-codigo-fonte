@@ -22,6 +22,8 @@ export interface ItemMenuPortal {
 export interface ModuloMenu {
   id: string;
   nome: string;
+  /** área do menu que reúne módulos (manifesto "grupo", kit 1.6.0); sem ela, o módulo aparece sozinho */
+  grupo: string | null;
   prefixo: string;
   /** false quando a última verificação de saúde falhou (o menu usa o manifesto guardado) */
   noAr: boolean;
@@ -50,7 +52,14 @@ export function montarMenu(estados: readonly EstadoModulo[], u: UsuarioMenu): Mo
       .filter((i) => /^\/(?![/\\])/.test(i.caminho))
       .map((i) => ({ id: i.id, rotulo: i.rotulo, caminho: i.caminho }));
     if (!itens.length) continue;
-    menu.push({ id: e.id, nome: m.nome ?? e.id, prefixo: e.prefixo, noAr: e.saude?.ok !== false, itens });
+    menu.push({
+      id: e.id,
+      nome: m.nome ?? e.id,
+      grupo: m.grupo ?? null,
+      prefixo: e.prefixo,
+      noAr: e.saude?.ok !== false,
+      itens,
+    });
   }
   return menu;
 }

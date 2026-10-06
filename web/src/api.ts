@@ -15,6 +15,8 @@ export interface ItemMenu {
 export interface ModuloMenu {
   id: string;
   nome: string;
+  /** área do menu (manifesto "grupo"), ex.: "Financeiro" */
+  grupo: string | null;
   prefixo: string;
   noAr: boolean;
   itens: ItemMenu[];
@@ -30,6 +32,7 @@ export interface SaudeModulo {
 export interface SituacaoModulo {
   id: string;
   nome: string;
+  grupo: string | null;
   url?: string;
   prefixo: string;
   origemPrefixo: "variavel" | "manifesto" | "padrao";
@@ -44,7 +47,6 @@ export interface SituacaoModulo {
 }
 export interface SituacaoModulos {
   ultimaAtualizacao: string | null;
-  catalogo: { novas: string[]; removidas: string[] };
   modulos: SituacaoModulo[];
 }
 
@@ -67,6 +69,7 @@ export interface ResumoImportacao {
     conflitos: { email: string; motivo: string }[];
     comSenhaDoCronogramas: number;
     semSenha: string[];
+    contasTeste: { email: string; motivo: string; bloqueada: boolean }[];
   };
   avisos: string[];
 }

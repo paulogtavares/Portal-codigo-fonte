@@ -1,5 +1,32 @@
 # Portal da plataforma · histórico de versões
 
+## 1.0.0-alpha.2 (2026-10-06) · ajustes da revisão de 06/10
+
+Kit **plataforma-kit 1.6.0** (pedido deste portal). Ajustes apontados na validação independente e na revisão do
+código-fonte (conversa de coordenação):
+
+- **Permissões novas sem reiniciar.** A administração de usuários e perfis lê o catálogo agregado a cada requisição
+  (kit 1.6.0): as permissões que um módulo ganha numa versão nova (ex.: `orcamentos.clientes.*` do Orçamentos v2.1.0)
+  aparecem nos perfis assim que o portal relê o manifesto (até 1 minuto, ou "Verificar agora" na tela Módulos). Saiu o
+  aviso "reinicie o portal". Perfis aceitam até 200 permissões.
+- **Menu por área.** O campo `grupo` do manifesto (kit 1.6.0) reúne módulos sob um título: o Orçamentos v2.1.0
+  (`"grupo": "Financeiro"`) aparece em **Financeiro**, onde depois entra o DRE; módulo sem grupo segue com o próprio
+  nome. A tela Módulos mostra a área.
+- **Contas de teste do Cronogramas na importação.** Conta com e-mail de teste do Cronogramas ou com a senha `teste123`
+  entra, em produção, inativa, sem senha e sem administrador; no computador entra normalmente, com aviso. A prévia e o
+  resumo listam essas contas, e a auditoria de contas de teste do portal passa a conhecer os e-mails de teste do
+  Cronogramas.
+- **`trustProxy` só no proxy da frente.** Antes o Fastify confiava em qualquer `X-Forwarded-For` (o navegador podia
+  inventar o IP e contornar o limite de tentativas de login por IP); agora confia só no proxy imediato (Railway).
+- **Conferência de origem.** Requisições que alteram dados (tudo menos GET, HEAD e OPTIONS), na API do portal e no
+  repasse aos módulos, só são aceitas da própria origem (`Sec-Fetch-Site: same-origin` ou `Origin` do próprio portal);
+  reforço ao `SameSite=Lax`.
+
+### Atenção ao atualizar
+
+- Publique o **kit 1.6.0** no GitHub (tag `v1.6.0`) antes de rodar `npm ci` neste código-fonte: o `package-lock.json`
+  aponta para o commit da tag.
+
 ## 1.0.0-alpha.1 (2026-10-05) · Plano 4, etapas 0 a 6
 
 Primeira versão do portal: a porta única da plataforma. Faz o login, é dono dos usuários e perfis, monta o menu a

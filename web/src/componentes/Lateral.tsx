@@ -20,6 +20,27 @@ function itemAtivo(m: ModuloMenu, caminho: string) {
   return melhor;
 }
 
+const SeloForaDoAr = () => (
+  <span className="selo selo-cancelado" title="O módulo não respondeu na última verificação">
+    fora do ar
+  </span>
+);
+
+/**
+ * Áreas do menu: módulos com o mesmo "grupo" do manifesto ficam sob um único título (ex.: Financeiro → Orçamentos e,
+ * depois, DRE); módulo sem grupo é uma área sozinho, com o próprio nome. A ordem é a do registro.
+ */
+export function agruparPorArea(menu: ModuloMenu[]) {
+  const areas: { chave: string; titulo: string; modulos: ModuloMenu[] }[] = [];
+  for (const m of menu) {
+    const chave = m.grupo ? `grupo:${m.grupo.toLowerCase()}` : `modulo:${m.id}`;
+    const area = areas.find((a) => a.chave === chave);
+    if (area) area.modulos.push(m);
+    else areas.push({ chave, titulo: m.grupo ?? m.nome, modulos: [m] });
+  }
+  return areas;
+}
+
 export function Lateral({ menu, carregando }: { menu: ModuloMenu[]; carregando: boolean }) {
   const { usuario, pode } = useSessao();
   const local = useLocation();
@@ -29,31 +50,37 @@ export function Lateral({ menu, carregando }: { menu: ModuloMenu[]; carregando: 
       <NavLink to="/" end className="lateral-item">
         <Home size={15} aria-hidden /> Início
       </NavLink>
-      {menu.map((m) => {
-        const ativo = rota?.modulo === m.id ? itemAtivo(m, rota.caminho) : null;
-        return (
-          <div key={m.id} className="lateral-grupo">
-            <div className="lateral-titulo">
-              {m.nome}
-              {!m.noAr && (
-                <span className="selo selo-cancelado" title="O módulo não respondeu na última verificação">
-                  fora do ar
-                </span>
-              )}
-            </div>
-            {m.itens.map((i) => (
-              <NavLink
-                key={i.id}
-                to={`/m/${m.id}${i.caminho === "/" ? "" : i.caminho}`}
-                className={() => `lateral-item${ativo === i.id ? " active" : ""}`}
-                aria-current={ativo === i.id ? "page" : undefined}
-              >
-                {i.rotulo}
-              </NavLink>
-            ))}
+      {agruparPorArea(menu).map((area) => (
+        <div key={area.chave} className="lateral-grupo">
+          <div className="lateral-titulo">
+            {area.titulo}
+            {area.modulos.length === 1 && !area.modulos[0].noAr && <SeloForaDoAr />}
           </div>
-        );
-      })}
+          {area.modulos.map((m) => {
+            const ativo = rota?.modulo === m.id ? itemAtivo(m, rota.caminho) : null;
+            return (
+              <div key={m.id} className="lateral-modulo">
+                {area.modulos.length > 1 && (
+                  <div className="lateral-subtitulo">
+                    {m.nome}
+                    {!m.noAr && <SeloForaDoAr />}
+                  </div>
+                )}
+                {m.itens.map((i) => (
+                  <NavLink
+                    key={i.id}
+                    to={`/m/${m.id}${i.caminho === "/" ? "" : i.caminho}`}
+                    className={() => `lateral-item${ativo === i.id ? " active" : ""}`}
+                    aria-current={ativo === i.id ? "page" : undefined}
+                  >
+                    {i.rotulo}
+                  </NavLink>
+                ))}
+              </div>
+            );
+          })}
+        </div>
+      ))}
       {!carregando && !menu.length && <p className="lateral-vazio">Seu perfil ainda não tem acesso a nenhum módulo.</p>}
       {(usuario?.administrador || pode("portal.modulos.ver")) && (
         <div className="lateral-grupo lateral-admin">

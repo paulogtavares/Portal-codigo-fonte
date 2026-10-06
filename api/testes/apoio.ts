@@ -36,12 +36,17 @@ export async function subirModulo(
     autenticacao?: "portal" | "local";
     segredo?: string;
     porta?: number;
+    /** área do menu do portal (manifesto "grupo") */
+    grupo?: string;
+    /** permissões além de <id>.ver e <id>.editar (ex.: simular a versão nova de um módulo) */
+    extras?: string[];
   } = {},
 ): Promise<ModuloTeste> {
   const id = o.id ?? "cronogramas";
   const catalogo = criarCatalogo(id, [
     { chave: `${id}.ver`, grupo: "Geral", nome: "Ver", descricao: "Ver" },
     { chave: `${id}.editar`, grupo: "Geral", nome: "Editar", descricao: "Editar" },
+    ...(o.extras ?? []).map((chave) => ({ chave, grupo: "Novas", nome: chave, descricao: chave })),
   ]);
   const banco = await abrirEmbutido();
   await banco.motor.exec(scriptIdentidade().sql);
@@ -70,6 +75,7 @@ export async function subirModulo(
       id,
       nome: o.nome ?? `Módulo ${id}`,
       prefixo: o.prefixo ?? `/${id}`,
+      ...(o.grupo ? { grupo: o.grupo } : {}),
       saude: "/api/saude",
       menu: [
         { id: "inicio", rotulo: "Início", caminho: "/" },

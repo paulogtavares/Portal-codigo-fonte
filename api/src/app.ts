@@ -17,8 +17,10 @@ import { criarSessao } from "plataforma-kit/sessao";
 import { auditarUsuariosDeTeste } from "plataforma-kit/usuariosTeste";
 import type { BancoModulo } from "./banco.ts";
 import { aplicarMigracoes } from "./migracoes.ts";
+import { EMAILS_TESTE_CRONOGRAMAS } from "./importacao.ts";
 import { catalogoParaAdministracao, criarRegistro, lerRegistro } from "./modulos.ts";
 import { catalogo, MODULO, PERMISSAO_INTERNA } from "./permissoes.ts";
+import { registrarConferenciaDeOrigem } from "./origem.ts";
 import { registrarProxy } from "./proxy.ts";
 import { rotasPortal } from "./rotas/portal.ts";
 
@@ -144,7 +146,12 @@ export async function criarApp(o: OpcoesApp) {
     );
   if (o.releituraPeriodica !== false) registro.iniciar();
 
-  const app = Fastify({ logger: false, bodyLimit: 5 * 1024 * 1024, trustProxy: true });
+  // trustProxy: 1 — confia só no proxy da frente (Railway); um X-Forwarded-For inventado pelo navegador não vira o IP
+  const app = Fastify({
+    logger: false,
+    bodyLimit: 5 * 1024 * 1024,
+    trustProxy: (_endereco: string, salto: number) => salto === 0,
+  });
   app.decorateRequest("usuario", null);
   app.addHook("onClose", async () => registro.parar());
   const sessao = criarSessao({
@@ -156,6 +163,8 @@ export async function criarApp(o: OpcoesApp) {
     log,
   });
 
+  // requisições que alteram dados só da própria origem (portal e módulos repassados)
+  registrarConferenciaDeOrigem(app);
   // o repasse vem antes de tudo: caminhos dos módulos não passam pelas rotas do portal
   registrarProxy(app, { registro, sessao, segredo, log });
 
@@ -177,17 +186,15 @@ export async function criarApp(o: OpcoesApp) {
     log,
   });
 
-  // usuários e perfis: telas e rotas do kit, com o catálogo de todos os módulos (perfis com visões por módulo)
-  const catalogoAdmin = await catalogoParaAdministracao(banco, registro);
+  // usuários e perfis: telas e rotas do kit, com o catálogo de todos os módulos (perfis com visões por módulo),
+  // lido a cada requisição (kit 1.6.0): permissões novas de um módulo valem sem reiniciar o portal
   await app.register(rotasAdministracao, {
     banco,
-    catalogo: catalogoAdmin,
+    catalogo: () => catalogoParaAdministracao(banco, registro),
     permissaoInterna: PERMISSAO_INTERNA,
     usuarios: { colunas: "cli.nome AS cliente_nome", juncoes: "LEFT JOIN clientes cli ON cli.id = u.cliente_id" },
   });
-  // catálogo dos módulos oferecido nos perfis desde o início (para avisar quando mudar; ver pedido ao kit 1.6.0)
-  const catalogoInicial = new Set(registro.catalogoModulos().map((p) => p.chave));
-  await app.register(rotasPortal, { banco, registro, catalogoInicial });
+  await app.register(rotasPortal, { banco, registro, producao: amb.producao });
   servirFront(app, o.pastaFront);
 
   return { app, amb, registro, sessao, segredo };
@@ -236,7 +243,8 @@ async function prepararUsuarios(
   } else {
     await auditarUsuariosDeTeste({
       banco,
-      emails: USUARIOS_TESTE.map((u) => u.email),
+      // as do portal e as de teste do Cronogramas (que podem chegar por importação)
+      emails: [...USUARIOS_TESTE.map((u) => u.email), ...EMAILS_TESTE_CRONOGRAMAS],
       senha: SENHA_TESTE,
       producao: amb.producao,
       log,

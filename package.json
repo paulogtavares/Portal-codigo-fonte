@@ -1,7 +1,7 @@
 {
   "name": "portal-plataforma",
-  "version": "1.0.0-alpha.1",
-  "buildDate": "2026-10-05",
+  "version": "1.0.0-alpha.2",
+  "buildDate": "2026-10-06",
   "description": "Portal da plataforma Infracommerce: login único, usuários e perfis, menu dos módulos e repasse com o token da plataforma",
   "private": true,
   "type": "module",
@@ -26,7 +26,7 @@
     "empacotar": "node empacotar/gerar-versao.mjs"
   },
   "dependencies": {
-    "plataforma-kit": "github:paulogtavares/plataforma-kit#v1.5.1"
+    "plataforma-kit": "github:paulogtavares/plataforma-kit#v1.6.0"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.5",
