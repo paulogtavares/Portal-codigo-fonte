@@ -1,0 +1,208 @@
+/* Portal: casca de altura total, menu lateral e área dos módulos (cores do tokens.css do kit). */
+html,
+body,
+#raiz {
+  height: 100%;
+}
+body {
+  margin: 0;
+  background: var(--papel);
+}
+.app-portal {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+.corpo-portal {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+}
+.marca-portal {
+  color: var(--destaque);
+  margin-right: 6px;
+}
+
+/* menu lateral */
+.lateral-portal {
+  width: 230px;
+  flex-shrink: 0;
+  overflow-y: auto;
+  border-right: 1px solid var(--linha);
+  background: var(--superficie);
+  padding: 10px 8px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.lateral-grupo {
+  margin-top: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.lateral-titulo {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--apagado);
+}
+.lateral-titulo .selo {
+  text-transform: none;
+  letter-spacing: 0;
+}
+.lateral-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 10px;
+  border-radius: var(--raio);
+  color: var(--tinta);
+  text-decoration: none;
+  font-size: 0.9rem;
+}
+.lateral-item:hover {
+  background: var(--superficie-2);
+}
+.lateral-item.active {
+  background: var(--selecao);
+  color: var(--destaque);
+  font-weight: 600;
+}
+.lateral-admin {
+  margin-top: auto;
+  padding-top: 12px;
+  border-top: 1px solid var(--linha);
+}
+.lateral-vazio {
+  padding: 8px 10px;
+  font-size: 0.85rem;
+  color: var(--apagado);
+}
+
+/* conteúdo: páginas do portal ou o iframe do módulo */
+.conteudo-portal {
+  flex: 1;
+  min-width: 0;
+  overflow: auto;
+  position: relative;
+}
+.area-modulos {
+  position: absolute;
+  inset: 0;
+  background: var(--papel);
+}
+.area-modulos[hidden],
+.quadro-modulo[hidden] {
+  display: none;
+}
+.quadro-modulo {
+  width: 100%;
+  height: 100%;
+  border: 0;
+  display: block;
+  background: var(--papel);
+}
+
+/* início */
+.grade-modulos {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 16px;
+}
+.cartao-modulo {
+  background: var(--superficie);
+  border: 1px solid var(--linha);
+  border-radius: var(--raio);
+  padding: 16px 18px;
+  box-shadow: var(--sombra);
+}
+.cartao-modulo h2 {
+  margin: 0 0 8px;
+  font-size: 1.05rem;
+}
+.cartao-modulo ul {
+  margin: 0;
+  padding-left: 18px;
+  line-height: 1.8;
+}
+.cartao-modulo a {
+  color: var(--destaque);
+}
+
+/* administração */
+.rolagem-tabela {
+  overflow-x: auto;
+}
+.tabela-portal {
+  width: 100%;
+  border-collapse: collapse;
+  background: var(--superficie);
+  border: 1px solid var(--linha);
+  border-radius: var(--raio);
+  font-size: 0.9rem;
+}
+.tabela-portal th,
+.tabela-portal td {
+  text-align: left;
+  vertical-align: top;
+  padding: 9px 12px;
+  border-bottom: 1px solid var(--linha);
+}
+.tabela-portal th {
+  font-size: 0.78rem;
+  color: var(--apagado);
+  font-weight: 600;
+}
+.tabela-portal code {
+  font-size: 0.82rem;
+}
+.cartao-importacao {
+  background: var(--superficie);
+  border: 1px solid var(--linha);
+  border-radius: var(--raio);
+  padding: 16px 18px;
+  max-width: 760px;
+}
+.resumo-importacao {
+  margin-top: 16px;
+  max-width: 760px;
+}
+.resumo-importacao h2,
+.titulo-secao {
+  font-size: 1rem;
+  margin: 20px 0 8px;
+}
+.historico {
+  padding-left: 18px;
+  line-height: 1.7;
+  font-size: 0.9rem;
+}
+
+@media (max-width: 760px) {
+  .corpo-portal {
+    flex-direction: column;
+  }
+  .lateral-portal {
+    width: auto;
+    max-height: 38vh;
+    border-right: 0;
+    border-bottom: 1px solid var(--linha);
+  }
+  .lateral-admin {
+    margin-top: 12px;
+  }
+}
+
+/* celular: a barra superior mostra só a marca, o tema e o avatar */
+@media (max-width: 560px) {
+  .topo .versao-app,
+  .topo .nome-usuario-topo {
+    display: none;
+  }
+}
