@@ -26,4 +26,3 @@ npm run empacotar       # dist-pacote/portal-vX_Y_Z-AAAA-MM-DD.zip
 Rotas próprias: `/api/portal/menu`, `/api/portal/modulos`, `/api/portal/clientes`, `/api/portal/importacao/cronogramas`,
 `/api/portal/importacoes`; o resto (`/api/auth/*`, `/api/eu`, `/api/admin/*`, `/api/status`, `/api/saude`) vem do kit.
 Telas: `/`, `/m/<módulo>/<caminho>`, `/admin/usuarios`, `/admin/modulos`, `/admin/importacao`.
-"# Portal-codigo-fonte"  
