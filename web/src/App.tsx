@@ -1,5 +1,7 @@
 /** Telas do portal: login, troca de senha e a casca (barra superior, menu lateral, módulos e administração). */
+import { useState } from "react";
 import { Navigate, Route, Routes } from "react-router";
+import { Menu, X } from "lucide-react";
 import { QueryClient, useQuery } from "@tanstack/react-query";
 import { Casca, TelaLogin, TelaTrocaSenha, useSessao } from "plataforma-kit/react";
 import { cliente, type ModuloMenu } from "./api.ts";
@@ -22,7 +24,24 @@ export const Marca = () => (
   </svg>
 );
 
+/** Botão do menu lateral no celular e em telas estreitas (no computador o menu fica sempre à mostra). */
+function BotaoMenu({ aberto, alternar }: { aberto: boolean; alternar: () => void }) {
+  return (
+    <button
+      type="button"
+      className="botao-menu-portal"
+      aria-label={aberto ? "Fechar o menu" : "Abrir o menu"}
+      aria-expanded={aberto}
+      aria-controls="menu-portal"
+      onClick={alternar}
+    >
+      {aberto ? <X size={20} aria-hidden /> : <Menu size={20} aria-hidden />}
+    </button>
+  );
+}
+
 function Portal() {
+  const [menuAberto, setMenuAberto] = useState(false);
   const { usuario, pode } = useSessao();
   const menu = useQuery({
     queryKey: ["menu", usuario?.id],
@@ -33,6 +52,7 @@ function Portal() {
   return (
     <div className="app-portal">
       <Casca
+        abas={<BotaoMenu aberto={menuAberto} alternar={() => setMenuAberto((a) => !a)} />}
         nome="Portal"
         marca={<Marca />}
         versao={__VERSAO__}
@@ -41,7 +61,7 @@ function Portal() {
         acoes={<SeletorTema />}
       />
       <div className="corpo-portal">
-        <Lateral menu={lista} carregando={menu.isLoading} />
+        <Lateral menu={lista} carregando={menu.isLoading} aberta={menuAberto} fechar={() => setMenuAberto(false)} />
         <main className="conteudo-portal">
           <AreaModulos menu={lista} />
           <Routes>

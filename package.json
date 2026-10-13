@@ -1,6 +1,6 @@
 {
   "name": "portal-plataforma",
-  "version": "1.0.0-alpha.4",
+  "version": "1.0.0-alpha.5",
   "buildDate": "2026-10-13",
   "description": "Portal da plataforma Infracommerce: login único, usuários e perfis, menu dos módulos e repasse com o token da plataforma",
   "private": true,

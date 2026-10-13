@@ -1,5 +1,5 @@
 /** Menu lateral: módulos e itens vindos dos manifestos (já filtrados pelo servidor) e a administração. */
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { NavLink, useLocation } from "react-router";
 import { Activity, ChevronRight, Home, Upload, Users } from "lucide-react";
 import { useSessao } from "plataforma-kit/react";
@@ -118,56 +118,84 @@ export function agruparPorArea(menu: ModuloMenu[]) {
   return areas;
 }
 
-export function Lateral({ menu, carregando }: { menu: ModuloMenu[]; carregando: boolean }) {
+export function Lateral({
+  menu,
+  carregando,
+  aberta = false,
+  fechar = () => {},
+}: {
+  menu: ModuloMenu[];
+  carregando: boolean;
+  /** no celular, o menu é uma gaveta que abre por cima do conteúdo */
+  aberta?: boolean;
+  fechar?: () => void;
+}) {
   const { usuario, pode } = useSessao();
   const local = useLocation();
   const rota = rotaDoPortal(local.pathname);
+  // no celular, escolher uma tela fecha a gaveta; Esc também fecha
+  const fecharRef = useRef(fechar);
+  fecharRef.current = fechar;
+  useEffect(() => {
+    fecharRef.current();
+  }, [local.pathname]);
+  useEffect(() => {
+    if (!aberta) return;
+    const aoTeclar = (e: KeyboardEvent) => e.key === "Escape" && fecharRef.current();
+    window.addEventListener("keydown", aoTeclar);
+    return () => window.removeEventListener("keydown", aoTeclar);
+  }, [aberta]);
   return (
-    <nav className="lateral-portal" aria-label="Módulos">
-      <NavLink to="/" end className="lateral-item">
-        <Home size={15} aria-hidden /> Início
-      </NavLink>
-      {agruparPorArea(menu).map((area) => (
-        <div key={area.chave} className="lateral-grupo">
-          <div className="lateral-titulo">
-            {area.titulo}
-            {area.modulos.length === 1 && !area.modulos[0].noAr && <SeloForaDoAr />}
+    <>
+      {aberta && <div className="fundo-menu-portal" onClick={fechar} aria-hidden />}
+      <nav id="menu-portal" className={`lateral-portal${aberta ? " aberta" : ""}`} aria-label="Módulos">
+        <NavLink to="/" end className="lateral-item">
+          <Home size={15} aria-hidden /> Início
+        </NavLink>
+        {agruparPorArea(menu).map((area) => (
+          <div key={area.chave} className="lateral-grupo">
+            <div className="lateral-titulo">
+              {area.titulo}
+              {area.modulos.length === 1 && !area.modulos[0].noAr && <SeloForaDoAr />}
+            </div>
+            {area.modulos.map((m) => {
+              const ativo = rota?.modulo === m.id ? itemAtivo(m, rota.caminho) : null;
+              return (
+                <div key={m.id} className="lateral-modulo">
+                  {area.modulos.length > 1 && (
+                    <div className="lateral-subtitulo">
+                      {m.nome}
+                      {!m.noAr && <SeloForaDoAr />}
+                    </div>
+                  )}
+                  <ItensDoModulo m={m} ativo={ativo} />
+                </div>
+              );
+            })}
           </div>
-          {area.modulos.map((m) => {
-            const ativo = rota?.modulo === m.id ? itemAtivo(m, rota.caminho) : null;
-            return (
-              <div key={m.id} className="lateral-modulo">
-                {area.modulos.length > 1 && (
-                  <div className="lateral-subtitulo">
-                    {m.nome}
-                    {!m.noAr && <SeloForaDoAr />}
-                  </div>
-                )}
-                <ItensDoModulo m={m} ativo={ativo} />
-              </div>
-            );
-          })}
-        </div>
-      ))}
-      {!carregando && !menu.length && <p className="lateral-vazio">Seu perfil ainda não tem acesso a nenhum módulo.</p>}
-      {(usuario?.administrador || pode("portal.modulos.ver")) && (
-        <div className="lateral-grupo lateral-admin">
-          <div className="lateral-titulo">Administração</div>
-          {usuario?.administrador && (
-            <NavLink to="/admin/usuarios" className="lateral-item">
-              <Users size={15} aria-hidden /> Usuários e perfis
+        ))}
+        {!carregando && !menu.length && (
+          <p className="lateral-vazio">Seu perfil ainda não tem acesso a nenhum módulo.</p>
+        )}
+        {(usuario?.administrador || pode("portal.modulos.ver")) && (
+          <div className="lateral-grupo lateral-admin">
+            <div className="lateral-titulo">Administração</div>
+            {usuario?.administrador && (
+              <NavLink to="/admin/usuarios" className="lateral-item">
+                <Users size={15} aria-hidden /> Usuários e perfis
+              </NavLink>
+            )}
+            <NavLink to="/admin/modulos" className="lateral-item">
+              <Activity size={15} aria-hidden /> Módulos
             </NavLink>
-          )}
-          <NavLink to="/admin/modulos" className="lateral-item">
-            <Activity size={15} aria-hidden /> Módulos
-          </NavLink>
-          {usuario?.administrador && (
-            <NavLink to="/admin/importacao" className="lateral-item">
-              <Upload size={15} aria-hidden /> Importar do Cronogramas
-            </NavLink>
-          )}
-        </div>
-      )}
-    </nav>
+            {usuario?.administrador && (
+              <NavLink to="/admin/importacao" className="lateral-item">
+                <Upload size={15} aria-hidden /> Importar do Cronogramas
+              </NavLink>
+            )}
+          </div>
+        )}
+      </nav>
+    </>
   );
 }

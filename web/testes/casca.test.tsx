@@ -154,6 +154,31 @@ describe("submenus no menu lateral (kit 1.7.0)", () => {
   });
 });
 
+describe("menu no celular (gaveta)", () => {
+  it("abre pelo botão, fecha ao escolher uma tela, pelo fundo e pelo Esc", async () => {
+    const fechar = vi.fn();
+    const { rerender } = montar("/", <Lateral menu={menu} carregando={false} aberta fechar={fechar} />);
+    expect(document.querySelector(".lateral-portal")!.classList.contains("aberta")).toBe(true);
+    fechar.mockClear();
+    act(() => (document.querySelector(".fundo-menu-portal") as HTMLElement).click());
+    expect(fechar).toHaveBeenCalledTimes(1);
+    act(() => {
+      window.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape" }));
+    });
+    expect(fechar).toHaveBeenCalledTimes(2);
+    act(() => screen.getByRole("link", { name: "Modelos" }).click());
+    expect(fechar).toHaveBeenCalledTimes(3);
+    expect(local.pathname).toBe("/m/cronogramas/modelos");
+    void rerender;
+  });
+
+  it("fechada, não mostra o fundo", () => {
+    montar("/", <Lateral menu={menu} carregando={false} />);
+    expect(document.querySelector(".fundo-menu-portal")).toBeNull();
+    expect(document.querySelector(".lateral-portal")!.classList.contains("aberta")).toBe(false);
+  });
+});
+
 describe("menu lateral", () => {
   it("módulos, itens, aviso de fora do ar, item ativo e administração", () => {
     montar("/m/cronogramas/modelos/abc", <Lateral menu={menu} carregando={false} />);

@@ -1,5 +1,18 @@
 # Portal da plataforma · histórico de versões
 
+## 1.0.0-alpha.5 (2026-10-13) · navegação no celular
+
+- **Menu em gaveta no celular e em telas estreitas (até 900px).** Um botão no topo abre o menu por cima do conteúdo; ele
+  fecha ao escolher uma tela, ao tocar no fundo escurecido ou com Esc. O conteúdo e o módulo ocupam a largura toda, e
+  o módulo usa a altura real da tela (`100dvh`, que acompanha a barra do navegador que aparece e some).
+- **Sem zoom indesejado no iPhone.** Campos com 16px no celular: o Safari não aplica zoom ao tocar no login, e a tela
+  não fica deslocada para o lado depois de entrar (era o corte à esquerda no iPhone 13 mini).
+- **Áreas tocáveis de 44px**, respiro para o entalhe e a barra de gestos (`viewport-fit=cover` e `safe-area-inset`),
+  topo enxuto (sem a versão; abaixo de 560px, sem o nome do usuário, que segue no menu dele), cartões do Início em uma
+  coluna e tabelas com rolagem própria.
+- Conferido no Chromium com iPhone 13 mini, iPhone SE (320px), Pixel 5, Galaxy S8 (360px) e iPad mini: sem rolagem
+  lateral em Início, Usuários e Módulos; a gaveta abre, mostra os submenus e fecha ao navegar.
+
 ## 1.0.0-alpha.4 (2026-10-13) · submenus dos módulos
 
 Kit **plataforma-kit 1.7.0** (pedido deste portal).

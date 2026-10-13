@@ -4,6 +4,10 @@ body,
 #raiz {
   height: 100%;
 }
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
 body {
   margin: 0;
   background: var(--papel);
@@ -12,6 +16,9 @@ body {
   display: flex;
   flex-direction: column;
   height: 100%;
+  /* altura real da tela no celular (barra do navegador que aparece e some) */
+  height: 100dvh;
+  overflow: hidden;
 }
 .corpo-portal {
   display: flex;
@@ -184,29 +191,6 @@ body {
   font-size: 0.9rem;
 }
 
-@media (max-width: 760px) {
-  .corpo-portal {
-    flex-direction: column;
-  }
-  .lateral-portal {
-    width: auto;
-    max-height: 38vh;
-    border-right: 0;
-    border-bottom: 1px solid var(--linha);
-  }
-  .lateral-admin {
-    margin-top: 12px;
-  }
-}
-
-/* celular: a barra superior mostra só a marca, o tema e o avatar */
-@media (max-width: 560px) {
-  .topo .versao-app,
-  .topo .nome-usuario-topo {
-    display: none;
-  }
-}
-
 /* várias telas de módulos na mesma área (ex.: Financeiro → Orçamentos e DRE) */
 .lateral-modulo + .lateral-modulo {
   margin-top: 6px;
@@ -257,4 +241,120 @@ body {
   margin: 8px 0 2px;
   font-size: 0.85rem;
   color: var(--grafite);
+}
+
+/* ------------------------------------------------------------------ celular e telas estreitas
+   Até 900px: o menu lateral vira uma gaveta que abre por cima do conteúdo (botão no topo), o conteúdo e o módulo
+   ocupam a largura toda, as áreas tocáveis têm pelo menos 44px e os campos usam 16px (o iPhone não dá zoom). */
+.botao-menu-portal {
+  display: none;
+}
+@media (max-width: 900px) {
+  .topo {
+    padding-left: max(12px, env(safe-area-inset-left));
+    padding-right: max(12px, env(safe-area-inset-right));
+    gap: 8px;
+  }
+  .topo .versao-app {
+    display: none;
+  }
+  .topo .marca {
+    min-width: 0;
+  }
+  .botao-menu-portal {
+    order: -1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    margin-left: -6px;
+    border: 0;
+    border-radius: var(--raio);
+    background: transparent;
+    color: inherit;
+    cursor: pointer;
+  }
+  .botao-menu-portal:focus-visible {
+    outline: 2px solid var(--destaque);
+  }
+  .corpo-portal {
+    position: relative;
+  }
+  .lateral-portal {
+    position: fixed;
+    z-index: 40;
+    top: 52px;
+    bottom: 0;
+    left: 0;
+    width: min(86vw, 320px);
+    padding-bottom: max(16px, env(safe-area-inset-bottom));
+    padding-left: max(8px, env(safe-area-inset-left));
+    transform: translateX(-100%);
+    transition: transform 0.2s ease;
+    box-shadow: none;
+    overscroll-behavior: contain;
+  }
+  .lateral-portal.aberta {
+    transform: none;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.25);
+  }
+  .fundo-menu-portal {
+    position: fixed;
+    z-index: 39;
+    inset: 52px 0 0 0;
+    background: rgba(15, 23, 42, 0.45);
+  }
+  .lateral-item {
+    min-height: 44px;
+    font-size: 1rem;
+  }
+  .lateral-filho {
+    font-size: 0.95rem;
+  }
+  .lateral-admin {
+    margin-top: 16px;
+  }
+  .conteudo-portal {
+    width: 100%;
+    padding-bottom: env(safe-area-inset-bottom);
+    -webkit-overflow-scrolling: touch;
+  }
+  .pagina {
+    padding: 18px max(14px, env(safe-area-inset-left)) 32px;
+  }
+  .cabecalho-pagina {
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  .cabecalho-pagina h1 {
+    font-size: 1.45rem;
+  }
+  .grade-modulos {
+    grid-template-columns: 1fr;
+  }
+  /* campos com 16px: o Safari do iPhone não aplica zoom ao tocar (e a tela não fica deslocada depois) */
+  input,
+  select,
+  textarea {
+    font-size: 16px !important;
+  }
+  .tabela-portal th,
+  .tabela-portal td {
+    padding: 8px 10px;
+  }
+}
+/* celular estreito: no topo ficam o menu, a marca, o tema e o avatar (o nome aparece ao abrir o menu do usuário) */
+@media (max-width: 560px) {
+  .topo .nome-usuario-topo {
+    display: none;
+  }
+  .topo-direita {
+    gap: 6px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .lateral-portal {
+    transition: none;
+  }
 }
