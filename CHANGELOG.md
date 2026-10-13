@@ -1,5 +1,17 @@
 # Portal da plataforma · histórico de versões
 
+## 1.0.0-alpha.6 (2026-10-13) · login nunca dentro do quadro
+
+Correção: com a sessão do portal encerrada, ao abrir um módulo aparecia **a tela de login do portal dentro do quadro do
+módulo**, com o menu ainda à mostra. O quadro saía do prefixo do módulo e carregava o próprio portal.
+
+- **O portal nunca roda dentro de um quadro do próprio portal.** Se isso acontecer, quem navega é a janela principal,
+  que mostra o login (sessão encerrada) ou o início.
+- **Quadro que sai do módulo:** o portal confere a própria sessão. Encerrada, mostra o login na janela principal; ativa,
+  abre o módulo de novo na última tela (no máximo uma vez a cada 30 s).
+- Conferido no Chromium: com o cookie apagado, o clique no C.P leva ao login na janela principal, sem login dentro do
+  quadro. 75 testes.
+
 ## 1.0.0-alpha.5 (2026-10-13) · navegação no celular
 
 - **Menu em gaveta no celular e em telas estreitas (até 900px).** Um botão no topo abre o menu por cima do conteúdo; ele

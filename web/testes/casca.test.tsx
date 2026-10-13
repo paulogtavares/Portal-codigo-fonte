@@ -245,3 +245,24 @@ describe("área dos módulos", () => {
     expect(document.querySelector("iframe")).toBeNull();
   });
 });
+
+describe("quadro que sai do módulo", () => {
+  it("com a sessão do portal encerrada, mostra o login na janela principal", async () => {
+    vi.spyOn(cliente, "get").mockRejectedValue(Object.assign(new Error("x"), { status: 401 }));
+    const expirou = vi.fn();
+    window.addEventListener("portal:sessao-expirada", expirou);
+    montar("/m/cronogramas", <AreaModulos menu={menu} />);
+    const f = document.querySelector<HTMLIFrameElement>("iframe[data-modulo=cronogramas]")!;
+    // o quadro foi parar na raiz do portal (fora de /cronogramas)
+    Object.defineProperty(f, "contentWindow", {
+      value: { location: { pathname: "/" }, postMessage: () => {} },
+      configurable: true,
+    });
+    await act(async () => {
+      f.dispatchEvent(new Event("load"));
+      await new Promise((r) => setTimeout(r, 10));
+    });
+    expect(expirou).toHaveBeenCalled();
+    window.removeEventListener("portal:sessao-expirada", expirou);
+  });
+});

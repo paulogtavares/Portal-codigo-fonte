@@ -107,6 +107,33 @@ export function AreaModulos({ menu }: { menu: ModuloMenu[] }) {
     return () => window.removeEventListener(EVENTO_TEMA, aoMudar);
   }, [enviar]);
 
+  /**
+   * O quadro saiu do prefixo do módulo (ex.: o módulo foi para "/" ao perder o acesso)? Confere a sessão do portal:
+   * encerrada, mostra o login na janela principal; ativa, abre o módulo de novo na última tela conhecida.
+   */
+  const conferirSaida = useCallback(async (id: string, prefixo: string, quadro: HTMLIFrameElement) => {
+    let caminho: string;
+    try {
+      caminho = quadro.contentWindow?.location.pathname ?? "";
+    } catch {
+      return; // outra origem: não é o caso dos módulos repassados
+    }
+    if (!caminho || caminho === "about:blank" || caminho === prefixo || caminho.startsWith(`${prefixo}/`)) return;
+    try {
+      await cliente.get("/eu");
+    } catch (x: any) {
+      if (x?.status === 401) {
+        window.dispatchEvent(new Event(EVENTO_SESSAO_EXPIRADA));
+        return;
+      }
+    }
+    // no máximo uma reabertura a cada 30 s (um módulo que insiste em sair não entra em laço)
+    const agora = Date.now();
+    if (agora - (renovados.current.get(id) ?? 0) < 30_000) return;
+    renovados.current.set(id, agora);
+    setAbertos((l) => l.map((x) => (x.id === id ? { ...x, versao: x.versao + 1 } : x)));
+  }, []);
+
   const visivel = !!rota;
   const desconhecido = rota && !menu.some((m) => m.id === rota.modulo);
   return (
@@ -132,7 +159,10 @@ export function AreaModulos({ menu }: { menu: ModuloMenu[] }) {
               if (f) quadros.current.set(a.id, f);
               else quadros.current.delete(a.id);
             }}
-            onLoad={() => enviar(a.id, { tipo: "tema", tema: lerTema() })}
+            onLoad={(e) => {
+              enviar(a.id, { tipo: "tema", tema: lerTema() });
+              conferirSaida(a.id, m.prefixo, e.currentTarget);
+            }}
           />
         );
       })}
