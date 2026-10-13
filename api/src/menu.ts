@@ -3,7 +3,8 @@
  *  - o módulo aparece para quem tem ao menos uma permissão dele (o administrador vê todos);
  *  - cada item respeita o exigeAlguma (basta uma) e o somenteAdministrador do manifesto;
  *  - itens que o portal assume (Usuários e perfis) nunca aparecem, mesmo de módulo com kit antigo;
- *  - módulo em modo local (AUTH_MODO=local) não entra: o portal não repassa cookie, então ele não funcionaria.
+ *  - módulo em modo local (AUTH_MODO=local) não entra: o portal não repassa cookie, então ele não funcionaria;
+ *  - submenus (filhos, kit 1.7.0) seguem as mesmas regras; um grupo sem nenhum submenu visível some.
  */
 import { itemSoLocal } from "plataforma-kit/servidor";
 import type { EstadoModulo } from "./modulos.ts";
@@ -17,6 +18,8 @@ export interface ItemMenuPortal {
   id: string;
   rotulo: string;
   caminho: string;
+  /** submenus visíveis para o usuário (kit 1.7.0); o grupo só aparece com ao menos um */
+  filhos?: ItemMenuPortal[];
 }
 
 export interface ModuloMenu {
@@ -42,15 +45,27 @@ function itemVisivel(u: UsuarioMenu, item: { exigeAlguma?: unknown; somenteAdmin
   return !exige.length || exige.some((p) => u.permissoes.includes(p));
 }
 
+const caminhoValido = (c: unknown) => typeof c === "string" && /^\/(?![/\\])/.test(c);
+
 export function montarMenu(estados: readonly EstadoModulo[], u: UsuarioMenu): ModuloMenu[] {
   const menu: ModuloMenu[] = [];
   for (const e of estados) {
     const m = e.manifesto;
     if (!m || m.autenticacao !== "portal" || !temVisao(u, e.id)) continue;
     const itens = m.menu
-      .filter((i) => !itemSoLocal(i) && itemVisivel(u, i))
-      .filter((i) => /^\/(?![/\\])/.test(i.caminho))
-      .map((i) => ({ id: i.id, rotulo: i.rotulo, caminho: i.caminho }));
+      .filter((i) => !itemSoLocal(i) && itemVisivel(u, i) && caminhoValido(i.caminho))
+      .map((i): ItemMenuPortal | null => {
+        const base = { id: i.id, rotulo: i.rotulo, caminho: i.caminho };
+        if (!Array.isArray(i.filhos)) return base;
+        const filhos = i.filhos
+          .filter((f) => !itemSoLocal(f) && itemVisivel(u, f) && caminhoValido(f.caminho))
+          .map((f) => ({ id: f.id, rotulo: f.rotulo, caminho: f.caminho }));
+        if (!filhos.length) return null;
+        // o grupo leva a um submenu que a pessoa pode abrir
+        const caminho = filhos.some((f) => f.caminho === i.caminho) ? i.caminho : filhos[0].caminho;
+        return { ...base, caminho, filhos };
+      })
+      .filter((i): i is ItemMenuPortal => i !== null);
     if (!itens.length) continue;
     menu.push({
       id: e.id,

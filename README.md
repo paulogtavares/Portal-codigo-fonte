@@ -1,6 +1,6 @@
 # Portal da plataforma
 
-Porta única da plataforma Infracommerce (kit plataforma-kit 1.6.0): login, usuários e perfis, menu dos módulos (Cronogramas, Orçamentos, C.P)
+Porta única da plataforma Infracommerce (kit plataforma-kit 1.7.0): login, usuários e perfis, menu dos módulos (Cronogramas, Orçamentos, C.P)
 e repasse com o token da plataforma. Plano 4 do "Plano de equalização tecnológica".
 
 ```bash

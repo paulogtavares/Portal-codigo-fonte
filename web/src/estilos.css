@@ -220,3 +220,41 @@ body {
   font-weight: 600;
   color: var(--grafite);
 }
+
+/* submenus (kit 1.7.0): grupo que abre, com as telas recuadas */
+.lateral-pai-titulo {
+  width: 100%;
+  border: 0;
+  background: none;
+  cursor: pointer;
+  font: inherit;
+  text-align: left;
+}
+.lateral-pai.contem-ativo > .lateral-pai-titulo {
+  color: var(--destaque);
+  font-weight: 600;
+}
+.lateral-seta {
+  flex-shrink: 0;
+  transition: transform 0.15s ease;
+}
+.lateral-pai-titulo[aria-expanded="true"] .lateral-seta {
+  transform: rotate(90deg);
+}
+.lateral-filhos {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-left: 14px;
+  padding-left: 8px;
+  border-left: 1px solid var(--linha);
+}
+.lateral-filho {
+  font-size: 0.86rem;
+  padding: 6px 10px;
+}
+.cartao-subtitulo {
+  margin: 8px 0 2px;
+  font-size: 0.85rem;
+  color: var(--grafite);
+}

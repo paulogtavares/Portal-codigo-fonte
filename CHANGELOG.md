@@ -1,5 +1,24 @@
 # Portal da plataforma · histórico de versões
 
+## 1.0.0-alpha.4 (2026-10-13) · submenus dos módulos
+
+Kit **plataforma-kit 1.7.0** (pedido deste portal).
+
+- **Submenus no menu lateral.** Um item do manifesto com `filhos` (kit 1.7.0) vira um grupo que abre, com as telas
+  recuadas: no C.P, Story Points → Visão total e Visão mensal; Projetos → Board, Negociações, Lista, Story Points;
+  Status Report → Por projeto e Executivo… O grupo da tela ativa abre sozinho e marca o submenu; os outros abrem com um
+  clique. Os submenus seguem as mesmas regras dos itens (`exigeAlguma`, `somenteAdministrador`, telas que o portal
+  assume); um grupo sem submenu visível some, e o clique no grupo leva a um submenu que a pessoa pode abrir.
+- **Início com os títulos do menu.** Os cartões do Início usam a área (ex.: Financeiro, Controle de Projetos) em vez do
+  nome do módulo.
+- **`.gitignore` no pacote.** O pacote traz o `.gitignore` do repositório de deploy (`.env`, `dados/`, `*.zip` e
+  `exportacao-*.json`, que tem hash de senha).
+
+### Atenção ao atualizar
+
+- Publique o **kit 1.7.0** no GitHub (tag `v1.7.0`) antes de rodar `npm ci` neste código-fonte.
+- Para o C.P mostrar os submenus, o manifesto dele precisa listar os `filhos` (conversa do C.P). Sem isso, nada muda.
+
 ## 1.0.0-alpha.3 (2026-10-06) · cliente nasce sem acesso
 
 Decisão de 06/10/2026: o usuário de cliente nunca nasce com cronograma, módulo ou valores disponíveis; o acesso é

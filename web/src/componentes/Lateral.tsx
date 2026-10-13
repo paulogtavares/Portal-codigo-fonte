@@ -1,6 +1,7 @@
 /** Menu lateral: módulos e itens vindos dos manifestos (já filtrados pelo servidor) e a administração. */
+import { useState } from "react";
 import { NavLink, useLocation } from "react-router";
-import { Activity, Home, Upload, Users } from "lucide-react";
+import { Activity, ChevronRight, Home, Upload, Users } from "lucide-react";
 import { useSessao } from "plataforma-kit/react";
 import type { ModuloMenu } from "../api.ts";
 
@@ -10,14 +11,90 @@ export function rotaDoPortal(pathname: string) {
   return m ? { modulo: m[1], caminho: m[2] || "/" } : null;
 }
 
-/** Item ativo: o de caminho mais longo que é início do caminho atual ("/" só quando é exatamente "/"). */
-function itemAtivo(m: ModuloMenu, caminho: string) {
-  let melhor: string | null = null;
+const casa = (destino: string, caminho: string) =>
+  destino === "/" ? caminho === "/" : caminho === destino || caminho.startsWith(`${destino}/`);
+
+/**
+ * Tela ativa: o item (ou submenu) de caminho mais longo que é início do caminho atual ("/" só quando é exatamente
+ * "/"). Devolve a chave "item" ou "item/filho" e o item pai, para abrir o grupo.
+ */
+export function itemAtivo(m: ModuloMenu, caminho: string): { chave: string; pai: string | null } | null {
+  let melhor: { chave: string; pai: string | null; tamanho: number } | null = null;
+  const considerar = (chave: string, pai: string | null, destino: string) => {
+    if (casa(destino, caminho) && (!melhor || destino.length > melhor.tamanho))
+      melhor = { chave, pai, tamanho: destino.length };
+  };
   for (const i of m.itens) {
-    const casa = i.caminho === "/" ? caminho === "/" : caminho === i.caminho || caminho.startsWith(`${i.caminho}/`);
-    if (casa && (!melhor || i.caminho.length > melhor.length)) melhor = i.id;
+    if (i.filhos?.length) for (const f of i.filhos) considerar(`${i.id}/${f.id}`, i.id, f.caminho);
+    else considerar(i.id, null, i.caminho);
   }
-  return melhor;
+  const achado = melhor as { chave: string; pai: string | null } | null;
+  return achado ? { chave: achado.chave, pai: achado.pai } : null;
+}
+
+const destinoNoPortal = (modulo: string, caminho: string) => `/m/${modulo}${caminho === "/" ? "" : caminho}`;
+
+/** Itens de um módulo; os que têm submenus viram grupos que abrem (abertos quando a tela ativa está neles). */
+function ItensDoModulo({ m, ativo }: { m: ModuloMenu; ativo: ReturnType<typeof itemAtivo> }) {
+  // grupos abertos pela pessoa e grupos da tela ativa que ela fechou
+  const [abertos, setAbertos] = useState<Set<string>>(() => new Set());
+  const [fechados, setFechados] = useState<Set<string>>(() => new Set());
+  const trocar = (s: Set<string>, id: string) => {
+    const n = new Set(s);
+    if (n.has(id)) n.delete(id);
+    else n.add(id);
+    return n;
+  };
+  return (
+    <>
+      {m.itens.map((i) => {
+        if (!i.filhos?.length)
+          return (
+            <NavLink
+              key={i.id}
+              to={destinoNoPortal(m.id, i.caminho)}
+              className={() => `lateral-item${ativo?.chave === i.id ? " active" : ""}`}
+              aria-current={ativo?.chave === i.id ? "page" : undefined}
+            >
+              {i.rotulo}
+            </NavLink>
+          );
+        const contemAtivo = ativo?.pai === i.id;
+        // o grupo da tela ativa fica aberto (a pessoa pode fechar); os outros abrem com um clique
+        const aberto = contemAtivo ? !fechados.has(i.id) : abertos.has(i.id);
+        return (
+          <div key={i.id} className={`lateral-pai${contemAtivo ? " contem-ativo" : ""}`}>
+            <button
+              type="button"
+              className="lateral-item lateral-pai-titulo"
+              aria-expanded={aberto}
+              onClick={() => (contemAtivo ? setFechados((s) => trocar(s, i.id)) : setAbertos((s) => trocar(s, i.id)))}
+            >
+              <ChevronRight size={14} className="lateral-seta" aria-hidden />
+              {i.rotulo}
+            </button>
+            {aberto && (
+              <div className="lateral-filhos">
+                {i.filhos.map((f) => {
+                  const chave = `${i.id}/${f.id}`;
+                  return (
+                    <NavLink
+                      key={f.id}
+                      to={destinoNoPortal(m.id, f.caminho)}
+                      className={() => `lateral-item lateral-filho${ativo?.chave === chave ? " active" : ""}`}
+                      aria-current={ativo?.chave === chave ? "page" : undefined}
+                    >
+                      {f.rotulo}
+                    </NavLink>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        );
+      })}
+    </>
+  );
 }
 
 const SeloForaDoAr = () => (
@@ -66,16 +143,7 @@ export function Lateral({ menu, carregando }: { menu: ModuloMenu[]; carregando: 
                     {!m.noAr && <SeloForaDoAr />}
                   </div>
                 )}
-                {m.itens.map((i) => (
-                  <NavLink
-                    key={i.id}
-                    to={`/m/${m.id}${i.caminho === "/" ? "" : i.caminho}`}
-                    className={() => `lateral-item${ativo === i.id ? " active" : ""}`}
-                    aria-current={ativo === i.id ? "page" : undefined}
-                  >
-                    {i.rotulo}
-                  </NavLink>
-                ))}
+                <ItensDoModulo m={m} ativo={ativo} />
               </div>
             );
           })}

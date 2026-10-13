@@ -11,6 +11,8 @@ export interface ItemMenu {
   id: string;
   rotulo: string;
   caminho: string;
+  /** submenus (kit 1.7.0) */
+  filhos?: ItemMenu[];
 }
 export interface ModuloMenu {
   id: string;

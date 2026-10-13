@@ -8,6 +8,7 @@ import type { ModuloMenu } from "../src/api.ts";
 import { cliente } from "../src/api.ts";
 import { AreaModulos } from "../src/componentes/AreaModulos.tsx";
 import { agruparPorArea, Lateral, rotaDoPortal } from "../src/componentes/Lateral.tsx";
+import { Inicio } from "../src/paginas/Inicio.tsx";
 
 const menu: ModuloMenu[] = [
   {
@@ -95,6 +96,61 @@ describe("áreas do menu", () => {
     const titulos = [...document.querySelectorAll(".lateral-titulo")].map((t) => t.textContent);
     expect(titulos.some((t) => t?.startsWith("Financeiro"))).toBe(true);
     expect(titulos.some((t) => t?.startsWith("Orçamentos"))).toBe(false);
+  });
+});
+
+describe("submenus no menu lateral (kit 1.7.0)", () => {
+  const cp: ModuloMenu = {
+    id: "cp",
+    nome: "C.P · Controle de Projetos",
+    grupo: "Controle de Projetos",
+    prefixo: "/cp",
+    noAr: true,
+    itens: [
+      { id: "dashboard", rotulo: "Dashboard", caminho: "/" },
+      {
+        id: "projetos",
+        rotulo: "Projetos",
+        caminho: "/projetos/board",
+        filhos: [
+          { id: "board", rotulo: "Board", caminho: "/projetos/board" },
+          { id: "negociacoes", rotulo: "Negociações", caminho: "/projetos/negociacoes" },
+        ],
+      },
+      {
+        id: "status",
+        rotulo: "Status Report",
+        caminho: "/status-report/executivo",
+        filhos: [
+          { id: "projeto", rotulo: "Por projeto", caminho: "/status-report/projeto" },
+          { id: "executivo", rotulo: "Executivo", caminho: "/status-report/executivo" },
+        ],
+      },
+    ],
+  };
+
+  it("o grupo da tela ativa abre sozinho e marca o submenu; os outros abrem com um clique", async () => {
+    montar("/m/cp/projetos/negociacoes", <Lateral menu={[cp]} carregando={false} />);
+    expect(screen.getByRole("button", { name: /Projetos/ }).getAttribute("aria-expanded")).toBe("true");
+    expect(screen.getByRole("link", { name: "Negociações" }).getAttribute("aria-current")).toBe("page");
+    expect(screen.getByRole("link", { name: "Negociações" }).getAttribute("href")).toBe("/m/cp/projetos/negociacoes");
+    const status = screen.getByRole("button", { name: /Status Report/ });
+    expect(status.getAttribute("aria-expanded")).toBe("false");
+    expect(screen.queryByRole("link", { name: "Por projeto" })).toBeNull();
+    act(() => status.click());
+    expect(screen.getByRole("link", { name: "Por projeto" })).toBeTruthy();
+  });
+
+  it("título da área no menu e no Início", () => {
+    montar("/", <Lateral menu={[cp]} carregando={false} />);
+    expect([...document.querySelectorAll(".lateral-titulo")].map((t) => t.textContent)).toContain(
+      "Controle de Projetos",
+    );
+    cleanup();
+    montar("/", <Inicio menu={[cp, menu[1]]} carregando={false} />);
+    expect(screen.getByRole("heading", { name: "Controle de Projetos" })).toBeTruthy();
+    expect(screen.getByRole("heading", { name: "Financeiro" })).toBeTruthy();
+    expect(screen.queryByRole("heading", { name: "Orçamentos" })).toBeNull();
   });
 });
 

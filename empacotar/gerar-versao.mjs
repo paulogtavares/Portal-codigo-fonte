@@ -67,6 +67,11 @@ writeFileSync(
     2,
   ) + "\n",
 );
+// .gitignore do repositório de deploy: segredos, dados locais e exportações (hash de senha) nunca vão para o GitHub
+writeFileSync(
+  join(pasta, ".gitignore"),
+  [".env", ".env.*", "!.env.exemplo", "dados/", "*.zip", "exportacao-*.json", ""].join("\n"),
+);
 writeFileSync(join(pasta, ".env.exemplo"), readFileSync(join(raiz, ".env.example"), "utf8"));
 writeFileSync(
   join(pasta, "iniciar.bat"),

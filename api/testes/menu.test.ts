@@ -55,3 +55,43 @@ describe("menu", () => {
     expect(temVisao({ administrador: false, permissoes: ["cronogramasx.ver"] }, "cronogramas")).toBe(false);
   });
 });
+
+describe("submenus (kit 1.7.0)", () => {
+  const cp = modulo("cp", [
+    { id: "dashboard", rotulo: "Dashboard", caminho: "/", exigeAlguma: ["cp.ver"] },
+    {
+      id: "projetos",
+      rotulo: "Projetos",
+      caminho: "/projetos/board",
+      exigeAlguma: ["cp.ver"],
+      filhos: [
+        { id: "board", rotulo: "Board", caminho: "/projetos/board", exigeAlguma: ["cp.negociacoes"] },
+        { id: "lista", rotulo: "Lista", caminho: "/projetos/lista" },
+        { id: "usuarios", rotulo: "Usuários e perfis", caminho: "/usuarios" },
+        { id: "externo", rotulo: "Externo", caminho: "//fora" },
+      ],
+    },
+    {
+      id: "admin",
+      rotulo: "Administração",
+      caminho: "/configuracoes",
+      filhos: [{ id: "config", rotulo: "Configurações", caminho: "/configuracoes", somenteAdministrador: true }],
+    },
+  ]);
+
+  it("filtra os submenus pelas mesmas regras e leva o grupo a um submenu visível", () => {
+    const m = montarMenu([cp], { administrador: false, permissoes: ["cp.ver"] });
+    const projetos = m[0].itens.find((i) => i.id === "projetos")!;
+    expect(projetos.filhos?.map((f) => f.id)).toEqual(["lista"]);
+    expect(projetos.caminho).toBe("/projetos/lista");
+    // grupo sem nenhum submenu visível some
+    expect(m[0].itens.map((i) => i.id)).toEqual(["dashboard", "projetos"]);
+  });
+
+  it("administrador vê todos os submenus, menos os que o portal assume e os caminhos inválidos", () => {
+    const m = montarMenu([cp], { administrador: true, permissoes: [] });
+    expect(m[0].itens.find((i) => i.id === "projetos")!.filhos?.map((f) => f.id)).toEqual(["board", "lista"]);
+    expect(m[0].itens.find((i) => i.id === "projetos")!.caminho).toBe("/projetos/board");
+    expect(m[0].itens.find((i) => i.id === "admin")!.filhos?.map((f) => f.id)).toEqual(["config"]);
+  });
+});
